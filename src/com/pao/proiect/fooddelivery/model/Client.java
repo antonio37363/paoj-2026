@@ -3,6 +3,7 @@ package com.pao.proiect.fooddelivery.model;
 import java.util.ArrayList;
 import java.util.List;
 
+// Extinde clasa Persoana pentru a reprezenta un client în sistemul de food delivery
 public class Client extends Persoana
 {
     private Adresa adresa;

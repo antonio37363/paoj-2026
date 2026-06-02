@@ -1,0 +1,8 @@
+out/
+*.class
+backup_etapa2_oracle_fix_*/
+backup_*/
+audit.csv
+Date_intrare.txt
+paoj-2026-etapa2/
+.idea/

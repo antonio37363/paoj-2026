@@ -1,5 +1,6 @@
 package com.pao.proiect.fooddelivery.model;
 
+// Clasa Adresa reprezinta o adresa de livrare, cu campurile oras, strada si numar.
 public final class Adresa
 {
     private final String oras;

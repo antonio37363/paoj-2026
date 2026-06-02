@@ -1,5 +1,6 @@
 package com.pao.proiect.fooddelivery.model;
 
+// Clasa de baza pentru persoanele din aplicatie
 public abstract class Persoana
 {
     protected int id;

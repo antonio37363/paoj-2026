@@ -3,6 +3,7 @@ package com.pao.proiect.fooddelivery.model;
 import java.util.ArrayList;
 import java.util.List;
 
+// Comanda este obiectul central al aplicatiei, leaga un client, un restaurant, o lista de produse, un sofer si o plata
 public class Comanda
 {
     private int id;

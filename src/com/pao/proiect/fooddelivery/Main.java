@@ -8,16 +8,19 @@ import com.pao.proiect.fooddelivery.service.ClientService;
 import com.pao.proiect.fooddelivery.service.ComandaService;
 import com.pao.proiect.fooddelivery.service.RestaurantService;
 import com.pao.proiect.fooddelivery.service.SoferService;
+import com.pao.proiect.fooddelivery.service.AuditService;
 
 import java.util.Scanner;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
 
+    // Serviciile singleton pentru gestionarea datelor
     private static final RestaurantService restaurantService = RestaurantService.getInstance();
     private static final ClientService clientService = ClientService.getInstance();
     private static final SoferService soferService = SoferService.getInstance();
     private static final ComandaService comandaService = ComandaService.getInstance();
+    private static final AuditService auditService = AuditService.getInstance();
 
     private static int nextRestaurantId = 1;
     private static int nextClientId = 1;
@@ -27,10 +30,13 @@ public class Main {
     private static int nextPlataId = 1;
 
     public static void main(String[] args) {
+        sincronizeazaNextIdsCuBazaDeDate();
         incarcaDateInitiale();
+        sincronizeazaNextIdsCuBazaDeDate();
 
         boolean ruleaza = true;
 
+        // Bucla principala a aplicatiei
         while (ruleaza) {
             afiseazaMeniuPrincipal();
 
@@ -53,6 +59,7 @@ public class Main {
         }
     }
 
+    // Metode pentru afisarea meniurilor, citirea input-ului si gestionarea interactiunii cu utilizatorul
     private static void afiseazaMeniuPrincipal() {
         System.out.println("\n=== Platforma Food Delivery ===");
         System.out.println("1. Profil Owner platforma");
@@ -60,6 +67,7 @@ public class Main {
         System.out.println("0. Iesire");
     }
 
+    // Meniul pentru owner si client, precum si metodele pentru adaugarea restaurantelor, produselor, soferilor, clientilor, plasarea comenzilor etc.
     private static void meniuOwner() {
         boolean inapoi = false;
 
@@ -103,6 +111,7 @@ public class Main {
         }
     }
 
+    // Meniul pentru client, cu optiuni pentru crearea contului, vizualizarea restaurantelor, plasarea comenzilor etc.
     private static void meniuClient() {
         boolean inapoi = false;
 
@@ -142,6 +151,9 @@ public class Main {
         }
     }
 
+
+
+    // Metodele pentru interactiunea cu utilizatorul, adaugarea de restaurante, produse, soferi, clienti, plasarea comenzilor etc.
     private static void adaugaRestaurantInteractively() {
         System.out.println("\n--- Adauga restaurant ---");
 
@@ -155,6 +167,7 @@ public class Main {
         Restaurant restaurant = new Restaurant(nextRestaurantId++, nume, adresa);
 
         restaurantService.adaugaRestaurant(restaurant);
+        auditService.logAction("adauga_restaurant");
 
         System.out.println("Restaurant adaugat cu succes:");
         afiseazaRestaurant(restaurant);
@@ -173,7 +186,8 @@ public class Main {
             String categorie = citesteText("Categorie: ");
 
             Produs produs = new Produs(nextProdusId++, numeProdus, pret, categorie);
-            restaurant.getMeniu().adaugaProdus(produs);
+            restaurantService.adaugaProdusInRestaurant(restaurantId, produs);
+            auditService.logAction("adauga_produs_in_restaurant");
 
             System.out.println("Produs adaugat cu succes in meniul restaurantului " + restaurant.getNume());
             afiseazaProdus(produs);
@@ -192,7 +206,9 @@ public class Main {
         String numarMasina = citesteText("Numar masina: ");
 
         Sofer sofer = new Sofer(nextSoferId++, nume, telefon, salariu, numarMasina);
+
         soferService.adaugaSofer(sofer);
+        auditService.logAction("adauga_sofer");
 
         System.out.println("Sofer adaugat cu succes:");
         afiseazaSofer(sofer);
@@ -212,6 +228,7 @@ public class Main {
         Client client = new Client(nextClientId++, nume, telefon, adresa);
 
         clientService.adaugaClient(client);
+        auditService.logAction("adauga_client");
 
         System.out.println("Client adaugat cu succes:");
         afiseazaClient(client);
@@ -224,6 +241,7 @@ public class Main {
 
         try {
             Restaurant restaurant = restaurantService.cautaRestaurantDupaId(restaurantId);
+            auditService.logAction("vezi_meniu_restaurant");
             afiseazaMeniuRestaurant(restaurant);
 
         } catch (RestaurantNotFoundException e) {
@@ -282,6 +300,9 @@ public class Main {
                 System.out.println("Comanda a fost plasata, dar nu exista momentan sofer disponibil.");
             }
 
+            comandaService.salveazaComanda(comanda);
+            auditService.logAction("plaseaza_comanda");
+
             System.out.println("Comanda finalizata:");
             afiseazaComanda(comanda);
 
@@ -289,6 +310,12 @@ public class Main {
             System.out.println(e.getMessage());
         }
     }
+
+
+
+
+
+    // Metodele pentru citirea input-ului de la utilizator
 
     private static int citesteInt(String mesaj) {
         System.out.print(mesaj);
@@ -325,36 +352,142 @@ public class Main {
         return scanner.nextLine();
     }
 
+
+
+    // Metoda pentru incarcarea datelor initiale in aplicatie
+
     private static void incarcaDateInitiale() {
-        Adresa adresaRestaurant = new Adresa("Bucuresti", "Strada Victoriei", "10");
-        Restaurant restaurant = new Restaurant(nextRestaurantId++, "Pizza Napoli", adresaRestaurant);
+        Restaurant restaurant = cautaRestaurantInitial("Pizza Napoli");
 
-        Produs pizza = new Produs(nextProdusId++, "Pizza Margherita", 35.0, "Pizza");
-        Produs paste = new Produs(nextProdusId++, "Paste Carbonara", 38.0, "Paste");
-        Produs cola = new Produs(nextProdusId++, "Cola", 8.0, "Bautura");
+        if (restaurant == null) {
+            Adresa adresaRestaurant = new Adresa("Bucuresti", "Strada Victoriei", "10");
+            restaurant = new Restaurant(nextRestaurantId++, "Pizza Napoli", adresaRestaurant);
+            restaurantService.adaugaRestaurant(restaurant);
+        }
 
-        restaurant.getMeniu().adaugaProdus(pizza);
-        restaurant.getMeniu().adaugaProdus(paste);
-        restaurant.getMeniu().adaugaProdus(cola);
+        adaugaProdusInitialDacaLipseste(restaurant, "Pizza Margherita", 35.0, "Pizza");
+        adaugaProdusInitialDacaLipseste(restaurant, "Paste Carbonara", 38.0, "Paste");
+        adaugaProdusInitialDacaLipseste(restaurant, "Cola", 8.0, "Bautura");
 
-        restaurantService.adaugaRestaurant(restaurant);
+        if (!existaClientInitial("Antonio", "0712345678")) {
+            Adresa adresaClient = new Adresa("Bucuresti", "Strada Libertatii", "7");
+            Client client = new Client(nextClientId++, "Antonio", "0712345678", adresaClient);
+            clientService.adaugaClient(client);
+        }
 
-        Adresa adresaClient = new Adresa("Bucuresti", "Strada Libertatii", "7");
-        Client client = new Client(nextClientId++, "Antonio", "0712345678", adresaClient);
-        clientService.adaugaClient(client);
-
-        Sofer sofer = new Sofer(nextSoferId++, "Andrei", "0722222222", 3500.0, "B-123-ABC");
-        soferService.adaugaSofer(sofer);
+        if (!existaSoferInitial("Andrei", "0722222222")) {
+            Sofer sofer = new Sofer(nextSoferId++, "Andrei", "0722222222", 3500.0, "B-123-ABC");
+            soferService.adaugaSofer(sofer);
+        }
     }
 
 
 
 
 
+    // Metodele pentru cautarea datelor initiale in baza de date si adaugarea acestora daca nu exista, precum si sincronizarea nextId-urilor cu baza de date
 
 
+    private static Restaurant cautaRestaurantInitial(String nume) {
+        for (Restaurant restaurant : restaurantService.listeazaRestaurante()) {
+            if (restaurant.getNume().equalsIgnoreCase(nume)) {
+                return restaurant;
+            }
+        }
+
+        return null;
+    }
+
+    private static void adaugaProdusInitialDacaLipseste(
+            Restaurant restaurant,
+            String numeProdus,
+            double pret,
+            String categorie
+    ) {
+        if (restaurant.getMeniu().cautaProdusDupaNume(numeProdus) != null) {
+            return;
+        }
+
+        Produs produs = new Produs(nextProdusId++, numeProdus, pret, categorie);
+
+        try {
+            restaurantService.adaugaProdusInRestaurant(restaurant.getId(), produs);
+        } catch (RestaurantNotFoundException e) {
+            System.out.println("Nu s-a putut incarca produsul initial: " + e.getMessage());
+        }
+    }
+
+    private static boolean existaClientInitial(String nume, String telefon) {
+        for (Client client : clientService.listeazaClienti()) {
+            if (client.getNume().equalsIgnoreCase(nume) && client.getTelefon().equals(telefon)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean existaSoferInitial(String nume, String telefon) {
+        for (Sofer sofer : soferService.listeazaSoferi()) {
+            if (sofer.getNume().equalsIgnoreCase(nume) && sofer.getTelefon().equals(telefon)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void sincronizeazaNextIdsCuBazaDeDate() {
+        int maxRestaurantId = 0;
+        int maxProdusId = 0;
+        int maxClientId = 0;
+        int maxSoferId = 0;
+        int maxComandaId = 0;
+        int maxPlataId = 0;
+
+        for (Restaurant restaurant : restaurantService.listeazaRestaurante()) {
+            maxRestaurantId = Math.max(maxRestaurantId, restaurant.getId());
+
+            for (Produs produs : restaurant.getMeniu().getProduse()) {
+                maxProdusId = Math.max(maxProdusId, produs.getId());
+            }
+        }
+
+        for (Client client : clientService.listeazaClienti()) {
+            maxClientId = Math.max(maxClientId, client.getId());
+        }
+
+        for (Sofer sofer : soferService.listeazaSoferi()) {
+            maxSoferId = Math.max(maxSoferId, sofer.getId());
+        }
+
+        for (Comanda comanda : comandaService.listeazaComenzi()) {
+            maxComandaId = Math.max(maxComandaId, comanda.getId());
+
+            if (comanda.getPlata() != null) {
+                maxPlataId = Math.max(maxPlataId, comanda.getPlata().getId());
+            }
+        }
+
+        nextRestaurantId = Math.max(nextRestaurantId, maxRestaurantId + 1);
+        nextProdusId = Math.max(nextProdusId, maxProdusId + 1);
+        nextClientId = Math.max(nextClientId, maxClientId + 1);
+        nextSoferId = Math.max(nextSoferId, maxSoferId + 1);
+        nextComandaId = Math.max(nextComandaId, maxComandaId + 1);
+        nextPlataId = Math.max(nextPlataId, maxPlataId + 1);
+    }
+
+
+
+
+
+    
+
+    // Metodele pentru afisarea restaurantelor, soferilor, clientilor, comenzilor, meniurilor etc.
 
     private static void afiseazaRestaurante() {
+        auditService.logAction("listeaza_restaurante");
+
         System.out.println("\n--- Restaurante disponibile ---");
 
         if (restaurantService.listeazaRestaurante().isEmpty()) {
@@ -368,6 +501,8 @@ public class Main {
     }
 
     private static void afiseazaSoferi() {
+        auditService.logAction("listeaza_soferi");
+
         System.out.println("\n--- Soferi inregistrati ---");
 
         if (soferService.listeazaSoferi().isEmpty()) {
@@ -381,6 +516,8 @@ public class Main {
     }
 
     private static void afiseazaClienti() {
+        auditService.logAction("listeaza_clienti");
+
         System.out.println("\n--- Clienti inregistrati ---");
 
         if (clientService.listeazaClienti().isEmpty()) {
@@ -394,6 +531,8 @@ public class Main {
     }
 
     private static void afiseazaComenzi() {
+        auditService.logAction("listeaza_comenzi");
+
         System.out.println("\n--- Comenzi inregistrate ---");
 
         if (comandaService.listeazaComenzi().isEmpty()) {

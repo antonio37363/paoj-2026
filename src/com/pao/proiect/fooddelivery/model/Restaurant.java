@@ -2,6 +2,7 @@ package com.pao.proiect.fooddelivery.model;
 
 import java.util.Objects;
 
+// Clasa Restaurant reprezinta un restaurant, cu campurile id, nume, adresa si meniu.
 public class Restaurant
 {
     private int id;

@@ -1,5 +1,6 @@
 package com.pao.proiect.fooddelivery.model;
 
+// Enum pentru a reprezenta starea unei comenzi
 public enum StatusComanda
 {
     PLASATA,

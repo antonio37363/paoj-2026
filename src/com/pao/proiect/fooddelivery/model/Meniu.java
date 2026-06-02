@@ -2,6 +2,7 @@ package com.pao.proiect.fooddelivery.model;
 
 import java.util.TreeSet;
 
+// Clasa Meniu reprezintă un meniu de produse disponibile pentru comanda în cadrul aplicației de food delivery.
 public class Meniu
 {
     private TreeSet<Produs> produse;

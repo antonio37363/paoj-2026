@@ -2,6 +2,7 @@ package com.pao.proiect.fooddelivery.model;
 
 import java.util.Objects;
 
+// Clasa Produs reprezinta un produs disponibil în meniul unui restaurant.
 public class Produs implements Comparable<Produs>
 {
     private int id;
@@ -44,6 +45,8 @@ public class Produs implements Comparable<Produs>
     public void setCategorie(String categorie) {
         this.categorie = categorie;
     }
+
+
 
     @Override
     public int compareTo(Produs other)

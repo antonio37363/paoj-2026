@@ -1,5 +1,6 @@
 package com.pao.proiect.fooddelivery.model;
 
+// Extinde clasa Angajat. Are numarul masinii si disponibilitatea pentru a prelua comenzi.
 public class Sofer extends Angajat
 {
     private String numarMasina;

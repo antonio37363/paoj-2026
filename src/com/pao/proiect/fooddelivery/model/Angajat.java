@@ -1,5 +1,6 @@
 package com.pao.proiect.fooddelivery.model;
 
+// Extinde clasa Persoana si adauga informatii specifice angajatilor
 public class Angajat extends Persoana
 {
     protected double salariu;

@@ -1,5 +1,6 @@
 package com.pao.proiect.fooddelivery.model;
 
+// Plata retine informatii despre o plata, cum ar fi suma, metoda de plata si daca a fost efectuata sau nu.
 public class Plata
 {
     private int id;
